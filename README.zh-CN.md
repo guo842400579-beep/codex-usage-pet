@@ -2,7 +2,7 @@
 
 一个 macOS 顶层悬浮小窗口，用来展示本机 Codex 的用量、限额、当前任务状态和动画宠物。
 
-应用读取本机 `~/.codex` 下的 Codex session 日志，不需要额外服务。若希望等级使用更准确的个人累计 Token 数，可以通过本机 Codex 登录态定时刷新 `profile-stats.json`。
+应用读取本机 `~/.codex` 下的 Codex session 日志，不需要额外服务。为了让等级正确使用个人累计 Token 数，建议首次安装后执行一次个人资料刷新定时任务，它会通过本机 Codex 登录态生成并定时更新 `profile-stats.json`。
 
 ## 功能
 
@@ -73,21 +73,23 @@ start-codex-usage-pet.command
 
 注意：Codex 的沙箱环境通常不能直接打开 Electron GUI，可能会看到 `SIGABRT`。这不代表应用代码失败。实际使用时请在普通终端运行，或从 Finder 双击 `start-codex-usage-pet.command`。
 
-## 可选：每小时刷新个人累计 Token
+## 建议安装：每小时刷新个人累计 Token
 
-窗口会优先读取 `~/Library/Application Support/codex-usage-pet/profile-stats.json` 里的累计 Token 数。可以先手动生成一次：
+等级显示依赖 `~/Library/Application Support/codex-usage-pet/profile-stats.json` 里的个人累计 Token 数。首次安装后建议至少执行一次这里的刷新配置；如果不执行，窗口仍然可以显示本机限额和当前任务，但等级只能回退到本机 session 日志累计值，无法保证是你的真实个人总 Token 等级。
+
+可以先手动生成一次个人资料统计文件：
 
 ```bash
 npm run fetch-profile
 ```
 
-安装 macOS LaunchAgent，每小时自动刷新：
+安装 macOS LaunchAgent，让个人累计 Token 每小时自动刷新：
 
 ```bash
 npm run launchd:install
 ```
 
-如果你在 Codex 沙箱里执行，这一步可能会被权限审批系统拦截，因为它需要写入 `~/Library/LaunchAgents` 并调用 `launchctl`。请在普通终端运行，或从 Finder 双击：
+如果你在 Codex 沙箱里执行，这一步可能会被权限审批系统拦截，因为它需要写入 `~/Library/LaunchAgents` 并调用 `launchctl`。请在普通终端运行，或从 Finder 双击这个文件：
 
 ```text
 install-profile-refresh.command

@@ -4,7 +4,7 @@
 
 macOS always-on-top floating window for local Codex usage, rate limits, task status, and an animated Codex pet.
 
-The app reads local Codex session logs from `~/.codex`, so it does not require a separate server. For precise lifetime-token leveling, it can also refresh `profile-stats.json` from the logged-in Codex auth file on a local hourly launchd job.
+The app reads local Codex session logs from `~/.codex`, so it does not require a separate server. For correct lifetime-token leveling, install the local hourly profile refresh once. It writes `profile-stats.json` from the logged-in Codex auth file, which is the data source used for the level display.
 
 ## Requirements
 
@@ -65,21 +65,23 @@ It prefers `node_modules/.bin/electron` and automatically tries to add the bundl
 
 Codex sandbox sessions usually cannot launch Electron GUI windows directly and may show `SIGABRT`. Use a normal terminal or double-click `start-codex-usage-pet.command` from Finder for real desktop use.
 
-## Optional Hourly Profile Refresh
+## Recommended Hourly Profile Refresh
 
-The floating window can read precise lifetime tokens from `~/Library/Application Support/codex-usage-pet/profile-stats.json`. Generate it once:
+The level display depends on the personal lifetime token count in `~/Library/Application Support/codex-usage-pet/profile-stats.json`. Run this setup at least once after installing the app. Without it, the window can still show local rate limits and recent activity, but the level will fall back to local session totals and may not represent your real lifetime token usage.
+
+Generate the profile stats file once:
 
 ```bash
 npm run fetch-profile
 ```
 
-Install an hourly macOS LaunchAgent:
+Install the hourly macOS LaunchAgent so the lifetime token count keeps updating:
 
 ```bash
 npm run launchd:install
 ```
 
-If you are inside a sandboxed Codex run, this command may be blocked because it writes `~/Library/LaunchAgents` and calls `launchctl`. Run it in a normal Terminal, or double-click:
+If you are inside a sandboxed Codex run, this command may be blocked because it writes `~/Library/LaunchAgents` and calls `launchctl`. Run it in a normal Terminal, or double-click this file from Finder:
 
 ```text
 install-profile-refresh.command
