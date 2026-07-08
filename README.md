@@ -33,9 +33,33 @@ start-codex-usage-pet.command
 
 The command file changes into its own directory before starting Electron, so it works after cloning or moving the project folder.
 
+## Build a macOS App
+
+Create a local `.app` bundle:
+
+```bash
+npm run pack:mac
+```
+
+The app bundle is generated at:
+
+```text
+dist/mac-*/Codex Usage Pet.app
+```
+
+Create a DMG installer:
+
+```bash
+npm run dist:mac
+```
+
+Generated app bundles and installers are ignored by Git.
+
+The generated app is not Developer ID signed or notarized unless you configure Apple signing credentials. On other Macs, users may need to approve it in macOS Security settings.
+
 ## Optional Hourly Profile Refresh
 
-The floating window can read precise lifetime tokens from `profile-stats.json`. Generate it once:
+The floating window can read precise lifetime tokens from `~/Library/Application Support/codex-usage-pet/profile-stats.json`. Generate it once:
 
 ```bash
 npm run fetch-profile
@@ -98,7 +122,7 @@ With the default `tokensPerLevel = 100000000`:
 - `100,000,001` to `200,000,000` tokens: Lv.2
 - `1,450,000,000` tokens: Lv.15, cap `1,500,000,000`
 
-If `profile-stats.json` exists, the app uses its `totalTokens`. Otherwise it falls back to recent local session totals plus `usage.levelTokenOffset`.
+If `profile-stats.json` exists in the app data directory, the app uses its `totalTokens`. Otherwise it falls back to recent local session totals plus `usage.levelTokenOffset`.
 
 ## Data Sources
 

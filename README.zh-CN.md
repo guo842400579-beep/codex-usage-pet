@@ -41,9 +41,33 @@ start-codex-usage-pet.command
 
 这个启动脚本会自动切换到项目所在目录，因此移动项目目录后仍可使用。
 
+## 打包成 macOS App
+
+生成本机 `.app`：
+
+```bash
+npm run pack:mac
+```
+
+生成后的应用在：
+
+```text
+dist/mac-*/Codex Usage Pet.app
+```
+
+生成 DMG 安装包：
+
+```bash
+npm run dist:mac
+```
+
+打包产物不会提交到 Git。
+
+默认生成的应用没有 Apple Developer ID 签名和公证。发给其他 Mac 使用时，对方可能需要在 macOS 安全设置里手动允许打开。
+
 ## 可选：每小时刷新个人累计 Token
 
-窗口会优先读取 `profile-stats.json` 里的累计 Token 数。可以先手动生成一次：
+窗口会优先读取 `~/Library/Application Support/codex-usage-pet/profile-stats.json` 里的累计 Token 数。可以先手动生成一次：
 
 ```bash
 npm run fetch-profile
@@ -110,7 +134,7 @@ levelCap = level * tokensPerLevel
 - `100,000,001` 到 `200,000,000`：Lv.2
 - `1,450,000,000`：Lv.15，上限 `1,500,000,000`
 
-如果存在 `profile-stats.json`，应用会使用其中的 `totalTokens`。否则会回退到最近本机 session 日志累计值加 `usage.levelTokenOffset`。
+如果用户数据目录里存在 `profile-stats.json`，应用会使用其中的 `totalTokens`。否则会回退到最近本机 session 日志累计值加 `usage.levelTokenOffset`。
 
 ## 数据来源
 

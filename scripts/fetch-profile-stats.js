@@ -4,9 +4,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const APP_ROOT = path.resolve(__dirname, '..');
+const APP_DATA_DIR = process.env.CODEX_USAGE_PET_DATA_DIR || path.join(os.homedir(), 'Library', 'Application Support', 'codex-usage-pet');
 const DEFAULT_AUTH_PATH = path.join(os.homedir(), '.codex', 'auth.json');
-const DEFAULT_OUTPUT_PATH = path.join(APP_ROOT, 'profile-stats.json');
+const DEFAULT_OUTPUT_PATH = path.join(APP_DATA_DIR, 'profile-stats.json');
 const PROFILE_URL = 'https://chatgpt.com/backend-api/wham/profiles/me';
 const DEFAULT_TIMEOUT_MS = 15000;
 

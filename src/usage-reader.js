@@ -5,6 +5,7 @@ const { pathToFileURL } = require('node:url');
 
 const APP_ROOT = path.resolve(__dirname, '..');
 const CONFIG_PATH = path.join(APP_ROOT, 'config.json');
+const APP_DATA_DIR = process.env.CODEX_USAGE_PET_DATA_DIR || path.join(os.homedir(), 'Library', 'Application Support', 'codex-usage-pet');
 
 function readConfig() {
   const raw = fs.readFileSync(CONFIG_PATH, 'utf8');
@@ -12,8 +13,13 @@ function readConfig() {
   const home = os.homedir();
   config.usage.codexHome = resolveConfigPath(config.usage.codexHome || path.join(home, '.codex'));
   if (config.usage.profileStatsFile) {
-    config.usage.profileStatsFile = resolveConfigPath(config.usage.profileStatsFile);
+    const profileStatsFile = config.usage.profileStatsFile;
+    config.usage.profileStatsFile = resolveDataPath(profileStatsFile);
+    if (!path.isAbsolute(expandHome(profileStatsFile))) {
+      config.usage.profileStatsFallbackFile = resolveConfigPath(profileStatsFile);
+    }
   }
+  config.usage.appDataDir = APP_DATA_DIR;
   config.pet.atlasPath = resolveConfigPath(config.pet.atlasPath);
   return config;
 }
@@ -29,6 +35,12 @@ function resolveConfigPath(value) {
   const expanded = expandHome(value);
   if (!expanded || typeof expanded !== 'string') return expanded;
   return path.isAbsolute(expanded) ? expanded : path.join(APP_ROOT, expanded);
+}
+
+function resolveDataPath(value) {
+  const expanded = expandHome(value);
+  if (!expanded || typeof expanded !== 'string') return expanded;
+  return path.isAbsolute(expanded) ? expanded : path.join(APP_DATA_DIR, expanded);
 }
 
 function walkJsonl(root, out = []) {
@@ -196,6 +208,8 @@ function collectUsage(config = readConfig()) {
 function normalizeProfileStats(config) {
   const fileStats = readProfileStatsFile(config?.usage?.profileStatsFile);
   if (fileStats) return fileStats;
+  const fallbackFileStats = readProfileStatsFile(config?.usage?.profileStatsFallbackFile);
+  if (fallbackFileStats) return fallbackFileStats;
 
   const stats = config?.usage?.profileStats;
   if (!stats || stats.enabled === false) return null;
