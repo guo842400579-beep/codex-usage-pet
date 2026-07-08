@@ -1,5 +1,7 @@
 # Codex Usage Pet
 
+[中文说明](README.zh-CN.md)
+
 macOS always-on-top floating window for local Codex usage, rate limits, task status, and an animated Codex pet.
 
 The app reads local Codex session logs from `~/.codex`, so it does not require a separate server. For precise lifetime-token leveling, it can also refresh `profile-stats.json` from the logged-in Codex auth file on a local hourly launchd job.
@@ -57,7 +59,7 @@ Uninstall:
 npm run launchd:uninstall
 ```
 
-The installer dynamically writes `~/Library/LaunchAgents/com.bingtang.codex-usage-pet.profile-stats.plist` using the current project path and the current Node.js executable. No hardcoded user path is committed.
+The installer dynamically writes `~/Library/LaunchAgents/com.codex-usage-pet.profile-stats.plist` using the current project path and the current Node.js executable. No hardcoded user path is committed.
 
 ## Configuration
 
@@ -94,7 +96,7 @@ With the default `tokensPerLevel = 100000000`:
 
 - `0` to `100,000,000` tokens: Lv.1
 - `100,000,001` to `200,000,000` tokens: Lv.2
-- `1,467,568,460` tokens: Lv.15, cap `1,500,000,000`
+- `1,450,000,000` tokens: Lv.15, cap `1,500,000,000`
 
 If `profile-stats.json` exists, the app uses its `totalTokens`. Otherwise it falls back to recent local session totals plus `usage.levelTokenOffset`.
 

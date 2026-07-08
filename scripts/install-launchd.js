@@ -6,7 +6,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
 const APP_ROOT = path.resolve(__dirname, '..');
-const LABEL = 'com.bingtang.codex-usage-pet.profile-stats';
+const LABEL = 'com.codex-usage-pet.profile-stats';
 const PLIST_PATH = path.join(os.homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
 const USER_ID = String(process.getuid?.() || execFileSync('id', ['-u'], { encoding: 'utf8' }).trim());
 
