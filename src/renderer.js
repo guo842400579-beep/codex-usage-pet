@@ -91,7 +91,7 @@ function renderUsage(data) {
   state.pet = data.pet;
   state.refreshMs = data.refreshMs || state.refreshMs;
 
-  $('level').textContent = `Lv. ${data.level.value}`;
+  $('level-number').textContent = data.level.value;
   $('xp-text').textContent = `${formatNumber(data.level.currentXp)} / ${formatNumber(data.level.nextXp)} XP`;
   setBar('xp-bar', data.level.percent);
 
