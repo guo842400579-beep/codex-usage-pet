@@ -11,7 +11,7 @@ The app reads local Codex session logs from `~/.codex`, so it does not require a
 - macOS
 - Node.js and npm
 - Codex local data under `~/.codex`
-- A Codex-compatible pet spritesheet, defaulting to `~/.codex/pets/white-devon/spritesheet.webp`
+- The default White Devon pet spritesheet is bundled at `assets/white-devon/spritesheet.webp`
 
 ## Install
 
@@ -114,7 +114,7 @@ Important defaults:
 ```json
 {
   "pet": {
-    "atlasPath": "~/.codex/pets/white-devon/spritesheet.webp"
+    "atlasPath": "assets/white-devon/spritesheet.webp"
   },
   "usage": {
     "codexHome": "~/.codex",

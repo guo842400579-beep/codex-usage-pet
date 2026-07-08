@@ -1,7 +1,7 @@
 {
   "pet": {
     "name": "Devon",
-    "atlasPath": "~/.codex/pets/white-devon/spritesheet.webp",
+    "atlasPath": "assets/white-devon/spritesheet.webp",
     "cellWidth": 192,
     "cellHeight": 208,
     "columns": 8,

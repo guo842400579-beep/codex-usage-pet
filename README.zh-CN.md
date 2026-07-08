@@ -19,7 +19,7 @@
 - macOS
 - Node.js 和 npm
 - 本机已有 Codex 数据目录 `~/.codex`
-- 默认宠物文件：`~/.codex/pets/white-devon/spritesheet.webp`
+- 默认 White Devon 宠物文件已内置在 `assets/white-devon/spritesheet.webp`
 
 ## 安装
 
@@ -122,7 +122,7 @@ npm run launchd:uninstall
 ```json
 {
   "pet": {
-    "atlasPath": "~/.codex/pets/white-devon/spritesheet.webp"
+    "atlasPath": "assets/white-devon/spritesheet.webp"
   },
   "usage": {
     "codexHome": "~/.codex",
