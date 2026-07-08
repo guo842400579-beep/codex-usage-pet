@@ -99,7 +99,16 @@ npm run launchd:status
 npm run launchd:uninstall
 ```
 
-安装脚本会根据当前项目路径和当前 Node.js 路径动态生成 plist，不会依赖仓库里的硬编码路径。
+安装脚本会根据当前项目路径动态生成 plist。LaunchAgent 会通过 `/usr/bin/env node` 启动刷新脚本，并在 PATH 里加入 Homebrew 常见路径和 Codex Desktop 自带运行时，因此不会依赖安装时使用的那个 Node.js 绝对路径。这里需要 Node.js 18+。
+
+日志会写到：
+
+```text
+~/Library/Logs/codex-usage-pet/profile-stats.out.log
+~/Library/Logs/codex-usage-pet/profile-stats.err.log
+```
+
+如果安装后移动了项目目录，需要在新目录里重新执行一次 `npm run launchd:install`。
 
 ## 配置
 

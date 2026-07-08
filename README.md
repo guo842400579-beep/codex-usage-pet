@@ -91,7 +91,16 @@ Uninstall:
 npm run launchd:uninstall
 ```
 
-The installer dynamically writes `~/Library/LaunchAgents/com.codex-usage-pet.profile-stats.plist` using the current project path and the current Node.js executable. No hardcoded user path is committed.
+The installer dynamically writes `~/Library/LaunchAgents/com.codex-usage-pet.profile-stats.plist` using the current project path. The LaunchAgent uses `/usr/bin/env node` with a PATH that includes common Homebrew locations and the Codex Desktop bundled runtime, so it does not depend on the exact Node.js executable used during install. Node.js 18+ is required.
+
+Logs are written to:
+
+```text
+~/Library/Logs/codex-usage-pet/profile-stats.out.log
+~/Library/Logs/codex-usage-pet/profile-stats.err.log
+```
+
+If you move the project folder after installing the LaunchAgent, run `npm run launchd:install` again from the new folder.
 
 ## Configuration
 

@@ -8,6 +8,18 @@ const { execFileSync } = require('node:child_process');
 const APP_ROOT = path.resolve(__dirname, '..');
 const LABEL = 'com.codex-usage-pet.profile-stats';
 const PLIST_PATH = path.join(os.homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
+const LOG_DIR = path.join(os.homedir(), 'Library', 'Logs', 'codex-usage-pet');
+const FETCH_SCRIPT_PATH = path.join(APP_ROOT, 'scripts', 'fetch-profile-stats.js');
+const NODE_SEARCH_PATH = [
+  path.join(os.homedir(), '.cache', 'codex-runtimes', 'codex-primary-runtime', 'dependencies', 'node', 'bin'),
+  path.join(os.homedir(), '.cache', 'codex-runtimes', 'codex-primary-runtime', 'dependencies', 'bin'),
+  '/opt/homebrew/bin',
+  '/usr/local/bin',
+  '/usr/bin',
+  '/bin',
+  '/usr/sbin',
+  '/sbin'
+].join(':');
 const USER_ID = String(process.getuid?.() || execFileSync('id', ['-u'], { encoding: 'utf8' }).trim());
 
 function xmlEscape(value) {
@@ -20,10 +32,8 @@ function xmlEscape(value) {
 }
 
 function makePlist() {
-  const nodePath = process.execPath;
-  const scriptPath = path.join(APP_ROOT, 'scripts', 'fetch-profile-stats.js');
-  const stdoutPath = path.join(APP_ROOT, 'logs', 'profile-stats.out.log');
-  const stderrPath = path.join(APP_ROOT, 'logs', 'profile-stats.err.log');
+  const stdoutPath = path.join(LOG_DIR, 'profile-stats.out.log');
+  const stderrPath = path.join(LOG_DIR, 'profile-stats.err.log');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -34,9 +44,17 @@ function makePlist() {
 
   <key>ProgramArguments</key>
   <array>
-    <string>${xmlEscape(nodePath)}</string>
-    <string>${xmlEscape(scriptPath)}</string>
+    <string>/usr/bin/env</string>
+    <string>PATH=${xmlEscape(NODE_SEARCH_PATH)}</string>
+    <string>node</string>
+    <string>${xmlEscape(FETCH_SCRIPT_PATH)}</string>
   </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>${xmlEscape(NODE_SEARCH_PATH)}</string>
+  </dict>
 
   <key>RunAtLoad</key>
   <true/>
@@ -65,8 +83,11 @@ function runLaunchctl(args, options = {}) {
 }
 
 function install() {
+  if (!fs.existsSync(FETCH_SCRIPT_PATH)) {
+    throw new Error(`Missing profile fetch script: ${FETCH_SCRIPT_PATH}`);
+  }
   fs.mkdirSync(path.dirname(PLIST_PATH), { recursive: true });
-  fs.mkdirSync(path.join(APP_ROOT, 'logs'), { recursive: true });
+  fs.mkdirSync(LOG_DIR, { recursive: true });
   fs.writeFileSync(PLIST_PATH, makePlist(), 'utf8');
   try {
     runLaunchctl(['bootout', `gui/${USER_ID}`, PLIST_PATH]);
