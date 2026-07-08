@@ -57,6 +57,26 @@ Generated app bundles and installers are ignored by Git.
 
 The generated app is not Developer ID signed or notarized unless you configure Apple signing credentials. On other Macs, users may need to approve it in macOS Security settings.
 
+### If macOS says the app is damaged
+
+For unsigned, unnotarized builds downloaded from the internet or copied from another Mac, Gatekeeper may show:
+
+```text
+"Codex Usage Pet" is damaged and can't be opened.
+```
+
+This usually does not mean project files are missing. It means macOS attached a quarantine flag to an app that is not signed and notarized by an Apple Developer ID.
+
+For a trusted local build, remove the quarantine flag:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Codex Usage Pet.app"
+```
+
+Then open it from Finder again. A fully frictionless public release requires signing and notarization with an Apple Developer account.
+
+The current generated package is Apple Silicon (`arm64`). Build on an Intel Mac or configure a universal build if you need Intel support.
+
 ## Optional Hourly Profile Refresh
 
 The floating window can read precise lifetime tokens from `~/Library/Application Support/codex-usage-pet/profile-stats.json`. Generate it once:

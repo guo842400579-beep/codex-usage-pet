@@ -65,6 +65,26 @@ npm run dist:mac
 
 默认生成的应用没有 Apple Developer ID 签名和公证。发给其他 Mac 使用时，对方可能需要在 macOS 安全设置里手动允许打开。
 
+### 如果 macOS 提示“文件已损坏”
+
+未签名、未公证的应用从网络下载或从另一台 Mac 拷贝后，Gatekeeper 可能会提示：
+
+```text
+“Codex Usage Pet”已损坏，无法打开。
+```
+
+这通常不是缺少项目文件，也不是缺少 Node.js 环境，而是 macOS 给应用加了 quarantine 隔离标记，同时应用又没有 Apple Developer ID 签名和公证。
+
+如果你信任这个本地构建，可以在安装后执行：
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Codex Usage Pet.app"
+```
+
+然后再从 Finder 打开。真正面向公众无感安装，需要使用 Apple Developer 账号做 Developer ID 签名和 notarization 公证。
+
+当前生成的是 Apple Silicon (`arm64`) 包。如果对方是 Intel Mac，需要在 Intel Mac 上构建，或后续配置 universal 包。
+
 ## 可选：每小时刷新个人累计 Token
 
 窗口会优先读取 `~/Library/Application Support/codex-usage-pet/profile-stats.json` 里的累计 Token 数。可以先手动生成一次：
