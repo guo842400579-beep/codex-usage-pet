@@ -87,6 +87,12 @@ npm run fetch-profile
 npm run launchd:install
 ```
 
+如果你在 Codex 沙箱里执行，这一步可能会被权限审批系统拦截，因为它需要写入 `~/Library/LaunchAgents` 并调用 `launchctl`。请在普通终端运行，或从 Finder 双击：
+
+```text
+install-profile-refresh.command
+```
+
 查看状态：
 
 ```bash
@@ -97,6 +103,12 @@ npm run launchd:status
 
 ```bash
 npm run launchd:uninstall
+```
+
+也可以从 Finder 双击：
+
+```text
+uninstall-profile-refresh.command
 ```
 
 安装脚本会根据当前项目路径动态生成 plist。LaunchAgent 会通过 `/usr/bin/env node` 启动刷新脚本，并在 PATH 里加入 Homebrew 常见路径和 Codex Desktop 自带运行时，因此不会依赖安装时使用的那个 Node.js 绝对路径。这里需要 Node.js 18+。

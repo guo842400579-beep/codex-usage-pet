@@ -79,6 +79,12 @@ Install an hourly macOS LaunchAgent:
 npm run launchd:install
 ```
 
+If you are inside a sandboxed Codex run, this command may be blocked because it writes `~/Library/LaunchAgents` and calls `launchctl`. Run it in a normal Terminal, or double-click:
+
+```text
+install-profile-refresh.command
+```
+
 Check status:
 
 ```bash
@@ -89,6 +95,12 @@ Uninstall:
 
 ```bash
 npm run launchd:uninstall
+```
+
+You can also double-click:
+
+```text
+uninstall-profile-refresh.command
 ```
 
 The installer dynamically writes `~/Library/LaunchAgents/com.codex-usage-pet.profile-stats.plist` using the current project path. The LaunchAgent uses `/usr/bin/env node` with a PATH that includes common Homebrew locations and the Codex Desktop bundled runtime, so it does not depend on the exact Node.js executable used during install. Node.js 18+ is required.
