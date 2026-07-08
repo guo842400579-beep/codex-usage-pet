@@ -1,0 +1,10 @@
+node_modules/
+.npm-cache/
+.DS_Store
+
+logs/
+profile-stats.json
+WORKLOG.md
+*.tmp
+
+launchd/*.plist

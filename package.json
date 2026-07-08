@@ -1,0 +1,19 @@
+{
+  "name": "codex-usage-pet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Always-on-top macOS Codex usage pet window.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "node src/usage-reader.js --once",
+    "fetch-profile": "node scripts/fetch-profile-stats.js",
+    "launchd:install": "node scripts/install-launchd.js install",
+    "launchd:uninstall": "node scripts/install-launchd.js uninstall",
+    "launchd:status": "node scripts/install-launchd.js status",
+    "launchd:print": "node scripts/install-launchd.js print"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7"
+  }
+}

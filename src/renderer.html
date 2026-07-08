@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex Usage Pet</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section id="panel" class="panel">
+        <div class="window-actions">
+          <button id="refresh" title="Refresh">↻</button>
+          <button id="pin" title="Toggle always on top">⌖</button>
+          <button id="close" title="Close">×</button>
+        </div>
+
+        <div class="hero">
+          <div class="pet-wrap">
+            <div id="pet" class="pet"></div>
+          </div>
+          <div class="identity">
+            <div id="task-bubble" class="bubble">
+              <span id="bubble-status" class="bubble-status"></span>
+              <span id="bubble-text">Coding<br />together!</span>
+            </div>
+            <div class="xp-line">
+              <span id="level">Lv. 1</span>
+              <div class="xp-track"><div id="xp-bar" class="xp-bar"></div></div>
+            </div>
+            <div id="xp-text" class="xp-text">0 / 0 XP</div>
+          </div>
+        </div>
+
+        <section class="limit-row red">
+          <div class="limit-icon">♥</div>
+          <div class="limit-body">
+            <div class="limit-head">
+              <div class="limit-label">
+                <strong id="primary-title">5h limit</strong>
+                <span id="primary-reset" class="limit-reset">--</span>
+              </div>
+              <span id="primary-left" class="limit-percent">-- left</span>
+            </div>
+            <div class="limit-track">
+              <div id="primary-bar" class="limit-bar"></div>
+              <span id="primary-cursor" class="reset-cursor"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="limit-row blue">
+          <div class="limit-icon">♦</div>
+          <div class="limit-body">
+            <div class="limit-head">
+              <div class="limit-label">
+                <strong id="secondary-title">weekly limit</strong>
+                <span id="secondary-reset" class="limit-reset">--</span>
+              </div>
+              <span id="secondary-left" class="limit-percent">-- left</span>
+            </div>
+            <div class="limit-track">
+              <div id="secondary-bar" class="limit-bar"></div>
+              <span id="secondary-cursor" class="reset-cursor"></span>
+            </div>
+            <div id="resize-grip" class="resize-grip" title="Resize">↘</div>
+          </div>
+        </section>
+
+        <footer class="meta">
+          <span id="plan">plan: --</span>
+          <span id="updated">not updated yet</span>
+        </footer>
+      </section>
+    </main>
+    <script src="./renderer.js"></script>
+  </body>
+</html>
