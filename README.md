@@ -13,16 +13,45 @@ The app reads local Codex session logs from `~/.codex`, so it does not require a
 - Codex local data under `~/.codex`
 - The default White Devon pet spritesheet is bundled at `assets/white-devon/spritesheet.webp`
 
+If you are running inside a managed Codex Desktop shell, `node` / `npm` may not be on PATH. In that case, use the bundled Codex Node.js and pnpm path shown below.
+
 ## Install
 
 ```bash
+git clone https://github.com/guo842400579-beep/codex-usage-pet.git
+cd codex-usage-pet
 npm install
+```
+
+### Install Without npm
+
+If the shell prints `npm: command not found` and Codex Desktop is installed, use the bundled runtime:
+
+```bash
+git clone https://github.com/guo842400579-beep/codex-usage-pet.git
+cd codex-usage-pet
+export PATH="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin:$PATH"
+pnpm install
+pnpm rebuild electron
+```
+
+The repo includes `pnpm-workspace.yaml` so Electron build scripts are approved. If pnpm still reports `ERR_PNPM_IGNORED_BUILDS`, run:
+
+```bash
+pnpm approve-builds electron
+pnpm rebuild electron
 ```
 
 ## Run
 
 ```bash
 npm start
+```
+
+If you installed with pnpm:
+
+```bash
+pnpm start
 ```
 
 You can also double-click:
@@ -32,6 +61,9 @@ start-codex-usage-pet.command
 ```
 
 The command file changes into its own directory before starting Electron, so it works after cloning or moving the project folder.
+It prefers `node_modules/.bin/electron` and automatically tries to add the bundled Codex Desktop Node.js runtime to PATH.
+
+Codex sandbox sessions usually cannot launch Electron GUI windows directly and may show `SIGABRT`. Use a normal terminal or double-click `start-codex-usage-pet.command` from Finder for real desktop use.
 
 ## Optional Hourly Profile Refresh
 

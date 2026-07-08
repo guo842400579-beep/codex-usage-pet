@@ -1,0 +1,7 @@
+allowBuilds:
+  electron: true
+packages:
+  - .
+
+onlyBuiltDependencies:
+  - electron

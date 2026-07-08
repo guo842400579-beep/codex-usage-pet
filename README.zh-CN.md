@@ -21,16 +21,45 @@
 - 本机已有 Codex 数据目录 `~/.codex`
 - 默认 White Devon 宠物文件已内置在 `assets/white-devon/spritesheet.webp`
 
+如果是在 Codex Desktop 的受控 shell 里操作，系统 PATH 里可能没有 `node` / `npm`。这种情况下可以使用 Codex 自带的 Node.js 和 pnpm，见下方“无 npm 的安装方式”。
+
 ## 安装
 
 ```bash
+git clone https://github.com/guo842400579-beep/codex-usage-pet.git
+cd codex-usage-pet
 npm install
+```
+
+### 无 npm 的安装方式
+
+如果当前 shell 提示 `npm: command not found`，但机器上安装了 Codex Desktop，可以先把 Codex 自带运行时加入 PATH：
+
+```bash
+git clone https://github.com/guo842400579-beep/codex-usage-pet.git
+cd codex-usage-pet
+export PATH="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin:$PATH"
+pnpm install
+pnpm rebuild electron
+```
+
+仓库内已包含 `pnpm-workspace.yaml`，会允许 Electron 的安装脚本运行。如果 pnpm 仍提示 `ERR_PNPM_IGNORED_BUILDS`，执行：
+
+```bash
+pnpm approve-builds electron
+pnpm rebuild electron
 ```
 
 ## 运行
 
 ```bash
 npm start
+```
+
+如果使用 pnpm 安装，也可以运行：
+
+```bash
+pnpm start
 ```
 
 也可以双击运行：
@@ -40,6 +69,9 @@ start-codex-usage-pet.command
 ```
 
 这个启动脚本会自动切换到项目所在目录，因此移动项目目录后仍可使用。
+它会优先使用本地 `node_modules/.bin/electron`，并会自动尝试把 Codex Desktop 自带 Node.js 加入 PATH。
+
+注意：Codex 的沙箱环境通常不能直接打开 Electron GUI，可能会看到 `SIGABRT`。这不代表应用代码失败。实际使用时请在普通终端运行，或从 Finder 双击 `start-codex-usage-pet.command`。
 
 ## 可选：每小时刷新个人累计 Token
 
