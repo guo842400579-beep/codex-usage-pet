@@ -11,42 +11,9 @@
     "launchd:install": "node scripts/install-launchd.js install",
     "launchd:uninstall": "node scripts/install-launchd.js uninstall",
     "launchd:status": "node scripts/install-launchd.js status",
-    "launchd:print": "node scripts/install-launchd.js print",
-    "pack:mac": "ELECTRON_BUILDER_CACHE=$PWD/.electron-builder-cache electron-builder --mac dir",
-    "dist:mac": "ELECTRON_BUILDER_CACHE=$PWD/.electron-builder-cache electron-builder --mac dmg"
+    "launchd:print": "node scripts/install-launchd.js print"
   },
   "devDependencies": {
-    "electron": "^31.7.7",
-    "electron-builder": "^26.15.3"
-  },
-  "build": {
-    "appId": "com.codexusagepet.app",
-    "productName": "Codex Usage Pet",
-    "asar": true,
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "src/**/*",
-      "scripts/**/*",
-      "assets/**/*",
-      "config.json",
-      "package.json",
-      "README.md",
-      "README.zh-CN.md",
-      "!logs/**",
-      "!profile-stats.json",
-      "!WORKLOG.md",
-      "!launchd/**",
-      "!dist/**",
-      "!.npm-cache/**"
-    ],
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": [
-        "dir",
-        "dmg"
-      ]
-    }
+    "electron": "^31.7.7"
   }
 }
