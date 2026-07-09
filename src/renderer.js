@@ -8,6 +8,7 @@ const state = {
   dragActionUntil: 0,
   skin: 'classic',
   levelPercent: 0,
+  xpTooltipText: '',
   refreshMs: 5000,
   refreshTimer: null,
   drag: null,
@@ -40,6 +41,12 @@ function setButtonTooltip(button, label) {
 
 function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(Math.round(Number(value || 0)));
+}
+
+function formatMillions(value) {
+  const millions = Number(value || 0) / 1000000;
+  const rounded = Math.round(millions * 10) / 10;
+  return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)}M`;
 }
 
 function formatWindow(minutes) {
@@ -88,13 +95,35 @@ function setPanelAngle(name, percent, totalDeg) {
 }
 
 function setXpFill(percent) {
-  const xpLine = document.querySelector('.xp-line');
+  const xpLine = $('xp-line');
   if (!xpLine) return;
   const style = getComputedStyle(xpLine);
   const start = Number.parseFloat(style.getPropertyValue('--xp-start')) || 0;
   const end = Number.parseFloat(style.getPropertyValue('--xp-end')) || start;
   const ratio = clamp(percent || 0, 0, 100) / 100;
   xpLine.style.setProperty('--xp-fill-start', `${end - (end - start) * ratio}deg`);
+}
+
+function moveXpTooltip(event) {
+  const tooltip = $('xp-tooltip');
+  if (!tooltip) return;
+  const offsetX = 12;
+  const offsetY = -34;
+  tooltip.style.left = `${event.clientX + offsetX}px`;
+  tooltip.style.top = `${event.clientY + offsetY}px`;
+}
+
+function showXpTooltip(event) {
+  if (state.skin !== 'rift' || !state.xpTooltipText) return;
+  const tooltip = $('xp-tooltip');
+  if (!tooltip) return;
+  tooltip.textContent = state.xpTooltipText;
+  moveXpTooltip(event);
+  tooltip.classList.add('visible');
+}
+
+function hideXpTooltip() {
+  $('xp-tooltip')?.classList.remove('visible');
 }
 
 function setCursor(id, limit) {
@@ -141,6 +170,8 @@ function applySkin(skin) {
   updateUiScale();
   if (state.skin === 'rift') {
     window.requestAnimationFrame(() => setXpFill(state.levelPercent));
+  } else {
+    hideXpTooltip();
   }
   window.codexUsagePet.resizeTo?.(WINDOW_TARGETS[state.skin]);
 }
@@ -214,6 +245,8 @@ function renderUsage(data) {
   $('level-number').textContent = data.level.value;
   $('rift-level').textContent = data.level.value;
   $('xp-text').textContent = `${formatNumber(data.level.currentXp)} / ${formatNumber(data.level.nextXp)} XP`;
+  state.xpTooltipText = `个人总token ${formatMillions(data.level.totalXp)} / ${formatMillions(data.level.levelCap)}`;
+  setButtonTooltip($('xp-line'), state.xpTooltipText);
   state.levelPercent = data.level.percent;
   setBar('xp-bar', data.level.percent);
   setPanelPercent('--xp-ratio', data.level.percent);
@@ -349,6 +382,9 @@ function tickPet() {
 on('refresh', 'click', refresh);
 on('character-toggle', 'click', toggleCharacter);
 on('skin-toggle', 'click', toggleSkin);
+on('xp-line', 'pointerenter', showXpTooltip);
+on('xp-line', 'pointermove', moveXpTooltip);
+on('xp-line', 'pointerleave', hideXpTooltip);
 on('close', 'click', () => window.codexUsagePet.close());
 on('pin', 'click', async () => {
   const pinned = await window.codexUsagePet.toggleTop();

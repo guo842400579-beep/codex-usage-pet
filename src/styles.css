@@ -518,6 +518,29 @@ body:not(.skin-rift-active) .resize-grip {
   display: none;
 }
 
+.xp-tooltip {
+  position: fixed;
+  z-index: 240;
+  display: none;
+  padding: 6px 8px;
+  border: 1px solid rgba(236, 191, 82, 0.32);
+  border-radius: 6px;
+  background: rgba(4, 10, 14, 0.94);
+  color: rgba(255, 255, 255, 0.96);
+  font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.xp-tooltip.visible {
+  display: block;
+}
+
 .skin-rift {
   --xp-ratio: 0;
   --xp-angle: 0deg;
