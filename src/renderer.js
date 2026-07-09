@@ -31,6 +31,13 @@ function on(id, eventName, handler) {
   if (element) element.addEventListener(eventName, handler);
 }
 
+function setButtonTooltip(button, label) {
+  if (!button) return;
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.dataset.tooltip = label;
+}
+
 function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(Math.round(Number(value || 0)));
 }
@@ -128,7 +135,7 @@ function applySkin(skin) {
   if (button) {
     button.classList.toggle('active', state.skin === 'rift');
     button.textContent = state.skin === 'rift' ? '◆' : '◇';
-    button.title = state.skin === 'rift' ? 'Switch to classic skin' : 'Switch to rift skin';
+    setButtonTooltip(button, state.skin === 'rift' ? '切换到经典皮肤' : '切换到 LOL 皮肤');
   }
   window.localStorage?.setItem('codexUsagePet.skin', state.skin);
   updateUiScale();
@@ -159,9 +166,9 @@ function applyCharacter(index) {
   const button = $('character-toggle');
   if (button) {
     const name = state.pet?.name || `character ${state.characterIndex + 1}`;
-    button.title = state.availablePets.length > 1
-      ? `Switch character: ${name}`
-      : `Character: ${name}`;
+    setButtonTooltip(button, state.availablePets.length > 1
+      ? `切换角色：${name}`
+      : `当前角色：${name}`);
     button.classList.toggle('active', state.availablePets.length > 1 && state.characterIndex > 0);
   }
 
@@ -345,7 +352,9 @@ on('skin-toggle', 'click', toggleSkin);
 on('close', 'click', () => window.codexUsagePet.close());
 on('pin', 'click', async () => {
   const pinned = await window.codexUsagePet.toggleTop();
-  $('pin').classList.toggle('active', pinned);
+  const button = $('pin');
+  button.classList.toggle('active', pinned);
+  setButtonTooltip(button, pinned ? '取消置顶' : '置顶窗口');
 });
 
 let resizeStart = null;
