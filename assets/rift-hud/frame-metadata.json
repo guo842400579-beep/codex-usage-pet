@@ -1,0 +1,52 @@
+{
+  "source": "/Users/bingtang/Downloads/ChatGPT Image 2026年7月9日 14_29_52.png",
+  "sourceSize": {
+    "width": 1983,
+    "height": 793
+  },
+  "crop": {
+    "x": 56,
+    "y": 120,
+    "width": 1878,
+    "height": 503
+  },
+  "frameSize": {
+    "width": 1878,
+    "height": 503
+  },
+  "regions": {
+    "portrait": {
+      "x": 251,
+      "y": 256,
+      "radius": 190
+    },
+    "xpArc": {
+      "center": {
+        "x": 251,
+        "y": 256
+      },
+      "innerRadius": 240,
+      "outerRadius": 294,
+      "startDeg": -54,
+      "endDeg": 54
+    },
+    "healthBar": {
+      "x": 560,
+      "y": 361,
+      "width": 1250,
+      "height": 38
+    },
+    "manaBar": {
+      "x": 560,
+      "y": 424,
+      "width": 1250,
+      "height": 37
+    },
+    "bubbleArea": {
+      "x": 522,
+      "y": 61,
+      "width": 1292,
+      "height": 272
+    }
+  }
+}

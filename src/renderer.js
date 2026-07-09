@@ -1,9 +1,13 @@
 const state = {
   frame: 0,
   pet: null,
+  availablePets: [],
+  characterIndex: 0,
   petAction: 'idle',
   activityAction: 'idle',
   dragActionUntil: 0,
+  skin: 'classic',
+  levelPercent: 0,
   refreshMs: 5000,
   refreshTimer: null,
   drag: null,
@@ -12,7 +16,15 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 // Original design baseline. Larger default windows intentionally scale up from this size.
-const BASE_WINDOW = { width: 364, height: 351, scale: 0.65 };
+const BASE_WINDOWS = {
+  classic: { width: 364, height: 250, scale: 0.65 },
+  rift: { width: 700, height: 188, scale: 1 }
+};
+const WINDOW_TARGETS = {
+  classic: { width: 437, height: 310, minWidth: 328, minHeight: 250 },
+  rift: { width: 700, height: 188, minWidth: 420, minHeight: 160 }
+};
+const SKINS = ['classic', 'rift'];
 
 function on(id, eventName, handler) {
   const element = $(id);
@@ -44,8 +56,38 @@ function formatResetTime(limit) {
   return `${minutes}m left`;
 }
 
+function formatCompactResetTime(limit) {
+  if (!limit?.available || limit.resetInMs == null) return '--';
+  const totalMinutes = Math.max(0, Math.ceil(Number(limit.resetInMs || 0) / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (Number(limit.windowMinutes) === 10080) return `${days}d${hours}h`;
+  if (days > 0) return `${days}d${hours}h${minutes}min`;
+  if (hours > 0) return `${hours}h${minutes}min`;
+  return `${minutes}min`;
+}
+
 function setBar(id, percent) {
   $(id).style.width = `${clamp(percent || 0, 0, 100)}%`;
+}
+
+function setPanelPercent(name, percent) {
+  $('panel')?.style.setProperty(name, String(clamp(percent || 0, 0, 100) / 100));
+}
+
+function setPanelAngle(name, percent, totalDeg) {
+  $('panel')?.style.setProperty(name, `${clamp(percent || 0, 0, 100) / 100 * totalDeg}deg`);
+}
+
+function setXpFill(percent) {
+  const xpLine = document.querySelector('.xp-line');
+  if (!xpLine) return;
+  const style = getComputedStyle(xpLine);
+  const start = Number.parseFloat(style.getPropertyValue('--xp-start')) || 0;
+  const end = Number.parseFloat(style.getPropertyValue('--xp-end')) || start;
+  const ratio = clamp(percent || 0, 0, 100) / 100;
+  xpLine.style.setProperty('--xp-fill-start', `${end - (end - start) * ratio}deg`);
 }
 
 function setCursor(id, limit) {
@@ -65,10 +107,78 @@ function clamp(value, min, max) {
 }
 
 function updateUiScale() {
-  const widthRatio = window.innerWidth / BASE_WINDOW.width;
-  const heightRatio = window.innerHeight / BASE_WINDOW.height;
-  const scale = clamp(Math.min(widthRatio, heightRatio) * BASE_WINDOW.scale, 0.45, 1.1);
+  const base = BASE_WINDOWS[state.skin] || BASE_WINDOWS.classic;
+  const widthRatio = window.innerWidth / base.width;
+  const heightRatio = window.innerHeight / base.height;
+  const scale = clamp(Math.min(widthRatio, heightRatio) * base.scale, 0.45, 1.1);
   document.querySelector('.shell')?.style.setProperty('--ui-scale', String(scale));
+}
+
+function initSkin() {
+  const saved = window.localStorage?.getItem('codexUsagePet.skin');
+  applySkin(SKINS.includes(saved) ? saved : 'classic');
+}
+
+function applySkin(skin) {
+  state.skin = SKINS.includes(skin) ? skin : 'classic';
+  document.body.classList.toggle('skin-rift-active', state.skin === 'rift');
+  const panel = $('panel');
+  panel?.classList.toggle('skin-rift', state.skin === 'rift');
+  const button = $('skin-toggle');
+  if (button) {
+    button.classList.toggle('active', state.skin === 'rift');
+    button.textContent = state.skin === 'rift' ? '◆' : '◇';
+    button.title = state.skin === 'rift' ? 'Switch to classic skin' : 'Switch to rift skin';
+  }
+  window.localStorage?.setItem('codexUsagePet.skin', state.skin);
+  updateUiScale();
+  if (state.skin === 'rift') {
+    window.requestAnimationFrame(() => setXpFill(state.levelPercent));
+  }
+  window.codexUsagePet.resizeTo?.(WINDOW_TARGETS[state.skin]);
+}
+
+function toggleSkin() {
+  const currentIndex = SKINS.indexOf(state.skin);
+  applySkin(SKINS[(currentIndex + 1) % SKINS.length]);
+}
+
+function getPetVariants(pet) {
+  if (!pet) return [];
+  const variants = Array.isArray(pet.variants) ? pet.variants : [];
+  return [pet, ...variants.map((variant) => ({ ...pet, ...variant }))]
+    .filter((variant) => variant?.atlasUrl);
+}
+
+function applyCharacter(index) {
+  if (!state.availablePets.length) return;
+  state.characterIndex = ((index % state.availablePets.length) + state.availablePets.length) % state.availablePets.length;
+  state.pet = state.availablePets[state.characterIndex];
+  window.localStorage?.setItem('codexUsagePet.characterIndex', String(state.characterIndex));
+
+  const button = $('character-toggle');
+  if (button) {
+    const name = state.pet?.name || `character ${state.characterIndex + 1}`;
+    button.title = state.availablePets.length > 1
+      ? `Switch character: ${name}`
+      : `Character: ${name}`;
+    button.classList.toggle('active', state.availablePets.length > 1 && state.characterIndex > 0);
+  }
+
+  const pet = $('pet');
+  if (state.pet?.atlasUrl) {
+    pet.style.backgroundImage = `url("${state.pet.atlasUrl}")`;
+    pet.style.width = `${state.pet.cellWidth}px`;
+    pet.style.height = `${state.pet.cellHeight}px`;
+  }
+}
+
+function toggleCharacter() {
+  if (state.availablePets.length <= 1) {
+    applyCharacter(0);
+    return;
+  }
+  applyCharacter(state.characterIndex + 1);
 }
 
 function renderLimit(prefix, limit) {
@@ -82,18 +192,25 @@ function renderLimit(prefix, limit) {
   }
   $(`${prefix}-title`).textContent = formatWindow(limit.windowMinutes);
   $(`${prefix}-reset`).textContent = formatResetTime(limit);
-  $(`${prefix}-left`).textContent = `${Math.round(limit.leftPercent)}% left`;
+  $(`${prefix}-left`).textContent = `${Math.round(limit.leftPercent)}% ${formatCompactResetTime(limit)}`;
   setBar(`${prefix}-bar`, limit.leftPercent);
   setCursor(`${prefix}-cursor`, limit);
 }
 
 function renderUsage(data) {
-  state.pet = data.pet;
+  state.availablePets = getPetVariants(data.pet);
+  const savedCharacterIndex = Number(window.localStorage?.getItem('codexUsagePet.characterIndex') || 0);
+  const nextCharacterIndex = state.pet ? state.characterIndex : savedCharacterIndex;
+  applyCharacter(nextCharacterIndex);
   state.refreshMs = data.refreshMs || state.refreshMs;
 
   $('level-number').textContent = data.level.value;
+  $('rift-level').textContent = data.level.value;
   $('xp-text').textContent = `${formatNumber(data.level.currentXp)} / ${formatNumber(data.level.nextXp)} XP`;
+  state.levelPercent = data.level.percent;
   setBar('xp-bar', data.level.percent);
+  setPanelPercent('--xp-ratio', data.level.percent);
+  setXpFill(state.levelPercent);
 
   renderLimit('primary', data.primary);
   renderLimit('secondary', data.secondary);
@@ -103,12 +220,7 @@ function renderUsage(data) {
   $('updated').textContent = `updated ${updated}`;
   renderActivity(data.activity);
 
-  const pet = $('pet');
-  if (data.pet?.atlasUrl) {
-    pet.style.backgroundImage = `url("${data.pet.atlasUrl}")`;
-    pet.style.width = `${data.pet.cellWidth}px`;
-    pet.style.height = `${data.pet.cellHeight}px`;
-  }
+  applyCharacter(state.characterIndex);
 }
 
 function renderActivity(activity) {
@@ -228,6 +340,8 @@ function tickPet() {
 }
 
 on('refresh', 'click', refresh);
+on('character-toggle', 'click', toggleCharacter);
+on('skin-toggle', 'click', toggleSkin);
 on('close', 'click', () => window.codexUsagePet.close());
 on('pin', 'click', async () => {
   const pinned = await window.codexUsagePet.toggleTop();
@@ -302,6 +416,12 @@ document.addEventListener('mouseleave', hideControlsSoon);
 window.addEventListener('blur', () => {
   if (!state.drag && !resizeStart) hideControlsSoon();
 });
+window.addEventListener('keydown', (event) => {
+  const key = String(event.key || '').toLowerCase();
+  if (!((event.metaKey || event.ctrlKey) && key === 'r') && key !== 'f5') return;
+  event.preventDefault();
+  window.codexUsagePet.reload?.();
+});
 window.codexUsagePet.onHoverState?.((inside) => {
   if (inside) {
     setControlsVisible(true);
@@ -310,6 +430,7 @@ window.codexUsagePet.onHoverState?.((inside) => {
   }
 });
 
+initSkin();
 refresh();
 updateUiScale();
 window.addEventListener('resize', updateUiScale);

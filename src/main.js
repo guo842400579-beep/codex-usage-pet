@@ -1,10 +1,13 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const fs = require('node:fs');
 const path = require('node:path');
 const { collectUsage, readConfig } = require('./usage-reader');
 
 let mainWindow;
 let hoverTimer = null;
 let lastHoverState = null;
+let reloadWatchers = [];
+let reloadTimer = null;
 
 function createWindow() {
   const config = readConfig();
@@ -43,10 +46,13 @@ function createWindow() {
   mainWindow.setAlwaysOnTop(true, 'floating');
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   mainWindow.loadFile(path.join(__dirname, 'renderer.html'));
+  installReloadShortcuts(mainWindow);
+  startDevReloadWatcher();
   startHoverTracking();
 
   mainWindow.on('closed', () => {
     if (hoverTimer) clearInterval(hoverTimer);
+    stopDevReloadWatcher();
     hoverTimer = null;
     lastHoverState = null;
     mainWindow = null;
@@ -77,8 +83,54 @@ function startHoverTracking() {
   }, 120);
 }
 
+function reloadWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return false;
+  mainWindow.webContents.reloadIgnoringCache();
+  return true;
+}
+
+function installReloadShortcuts(window) {
+  window.webContents.on('before-input-event', (event, input) => {
+    const key = String(input.key || '').toLowerCase();
+    const isModifierReload = (input.meta || input.control) && key === 'r';
+    const isFunctionReload = key === 'f5';
+    if (!isModifierReload && !isFunctionReload) return;
+    event.preventDefault();
+    reloadWindow();
+  });
+}
+
+function startDevReloadWatcher() {
+  if (process.env.CODEX_USAGE_PET_WATCH !== '1') return;
+  stopDevReloadWatcher();
+  const watchTargets = [
+    path.join(__dirname, 'renderer.html'),
+    path.join(__dirname, 'renderer.js'),
+    path.join(__dirname, 'styles.css'),
+    path.join(__dirname, 'preload.js'),
+    path.join(__dirname, '..', 'assets', 'rift-hud', 'frame.png')
+  ];
+
+  for (const target of watchTargets) {
+    if (!fs.existsSync(target)) continue;
+    const watcher = fs.watch(target, { persistent: false }, () => {
+      if (reloadTimer) clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(reloadWindow, 120);
+    });
+    reloadWatchers.push(watcher);
+  }
+}
+
+function stopDevReloadWatcher() {
+  for (const watcher of reloadWatchers) watcher.close();
+  reloadWatchers = [];
+  if (reloadTimer) clearTimeout(reloadTimer);
+  reloadTimer = null;
+}
+
 ipcMain.handle('usage:get', () => collectUsage(readConfig()));
 ipcMain.handle('window:close', () => app.quit());
+ipcMain.handle('window:reload', () => reloadWindow());
 ipcMain.handle('window:toggle-top', () => {
   if (!mainWindow) return false;
   const next = !mainWindow.isAlwaysOnTop();
@@ -107,6 +159,19 @@ ipcMain.handle('window:resize-by', (_event, delta) => {
   const heightDelta = Math.abs(dx) >= Math.abs(dy) ? dominantDelta / aspect : dominantDelta;
   const width = Math.max(min[0], Math.round(bounds.width + widthDelta));
   const height = Math.max(min[1], Math.round(bounds.height + heightDelta));
+  mainWindow.setBounds({ ...bounds, width, height });
+  return { width, height };
+});
+
+ipcMain.handle('window:resize-to', (_event, size) => {
+  if (!mainWindow) return null;
+  const bounds = mainWindow.getBounds();
+  const config = readConfig();
+  const width = Math.max(320, Math.round(Number(size?.width || bounds.width)));
+  const height = Math.max(160, Math.round(Number(size?.height || bounds.height)));
+  const minWidth = Math.max(240, Math.round(Number(size?.minWidth || config.window.minWidth || 320)));
+  const minHeight = Math.max(140, Math.round(Number(size?.minHeight || config.window.minHeight || 160)));
+  mainWindow.setMinimumSize(Math.min(minWidth, width), Math.min(minHeight, height));
   mainWindow.setBounds({ ...bounds, width, height });
   return { width, height };
 });

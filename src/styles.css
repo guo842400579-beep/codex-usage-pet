@@ -43,6 +43,13 @@ button.active {
   background: transparent;
 }
 
+body.skin-rift-active .shell {
+  --ui-scale: 1;
+  min-width: 420px;
+  min-height: 180px;
+  padding: 0;
+}
+
 .panel {
   position: relative;
   display: flex;
@@ -445,6 +452,11 @@ button.active {
   transform: translateY(0);
 }
 
+body:not(.skin-rift-active) .resize-grip {
+  right: 24px;
+  bottom: 0;
+}
+
 @media (max-height: 300px) {
   .panel {
     gap: 8px;
@@ -468,4 +480,319 @@ button.active {
     padding-top: 1px;
     padding-bottom: 1px;
   }
+}
+
+.skill-strip {
+  display: none;
+}
+
+.rift-level {
+  display: none;
+}
+
+.skin-rift {
+  --xp-ratio: 0;
+  --xp-angle: 0deg;
+  --rift-frame-width: 700px;
+  --rift-frame-height: 188px;
+  position: relative;
+  display: block;
+  width: var(--rift-frame-width);
+  height: var(--rift-frame-height);
+  min-height: var(--rift-frame-height);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+}
+
+.skin-rift::before {
+  content: "";
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  background: url("../assets/rift-hud/frame.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.skin-rift::after {
+  display: none;
+}
+
+.skin-rift .window-actions {
+  z-index: 20;
+  top: 3px;
+  right: 7px;
+}
+
+.skin-rift .hero,
+.skin-rift .identity {
+  display: contents;
+}
+
+.skin-rift .skill-strip {
+  display: none;
+}
+
+.skin-rift .pet-wrap {
+  position: absolute;
+  z-index: 2;
+  left: 2.8%;
+  top: 8.8%;
+  width: 22%;
+  height: 82%;
+  min-height: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 48% 42%, rgba(25, 42, 47, 0.98), rgba(4, 8, 11, 0.98) 68%);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.skin-rift .pet-wrap::before {
+  display: none;
+}
+
+.skin-rift .pet {
+  transform: scale(0.64) translateY(18px);
+  transform-origin: bottom center;
+  filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.44));
+}
+
+.skin-rift .xp-line {
+  --xp-start: 45deg;
+  --xp-end: 115deg;
+  --xp-fill-start: var(--xp-end);
+  --xp-inner: 42%;
+  --xp-outer: 51%;
+  --xp-feather: 0.6%;
+  position: absolute;
+  z-index: 0;
+  left: -17.2%;
+  top: -45%;
+  width: 52%;
+  height: auto;
+  aspect-ratio: 1;
+  display: block;
+  margin: 0;
+  border-radius: 50%;
+  opacity: 1;
+  transform: translateX(10px);
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent var(--xp-fill-start),
+      #a036ff var(--xp-fill-start),
+      #3b1176 var(--xp-end),
+      transparent var(--xp-end),
+      transparent 360deg
+    );
+  -webkit-mask: radial-gradient(circle, transparent 0 37.5%, #000 var(--xp-inner) var(--xp-outer), transparent calc(var(--xp-outer) + var(--xp-feather)));
+  mask: radial-gradient(circle, transparent 0 37.5%, #000 var(--xp-inner) var(--xp-outer), transparent calc(var(--xp-outer) + var(--xp-feather)));
+}
+
+.skin-rift .xp-line::before,
+.skin-rift .xp-line::after {
+  display: none;
+}
+
+.skin-rift .xp-line::before {
+  content: none;
+}
+
+.skin-rift .xp-line::after {
+  content: none;
+}
+
+.skin-rift .xp-stack,
+.skin-rift .xp-track,
+.skin-rift .xp-bar,
+.skin-rift .xp-text {
+  display: none;
+}
+
+.skin-rift .bubble {
+  position: absolute;
+  z-index: 7;
+  left: 32%;
+  top: 17.6%;
+  width: 61.7%;
+  min-height: 39%;
+  max-height: 44%;
+  margin: 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(236, 191, 82, 0.38);
+  border-radius: 8px;
+  background: rgba(4, 12, 16, 0.28);
+  color: #f5e7bd;
+  font-size: 15px;
+  line-height: 1.22;
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.86);
+  box-shadow: inset 0 0 20px rgba(5, 12, 16, 0.38);
+}
+
+.skin-rift .bubble::before,
+.skin-rift .bubble::after {
+  display: none;
+}
+
+.skin-rift .bubble.running .bubble-status {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  border-width: 2px;
+}
+
+.skin-rift .level {
+  display: none;
+}
+
+.skin-rift .rift-level {
+  position: absolute;
+  z-index: 9;
+  left: 19.4%;
+  top: 72.7%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 6.5%;
+  min-width: 27px;
+  height: 23.5%;
+  min-height: 27px;
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 3px #000, 0 0 7px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+.skin-rift .limit-row {
+  position: absolute;
+  z-index: 1;
+  left: 29.82%;
+  width: 66.8%;
+  display: block;
+  padding: 0;
+  transform: none;
+}
+
+.skin-rift .limit-row.red {
+  top: 72.1%;
+  height: 8%;
+}
+
+.skin-rift .limit-row.blue {
+  top: 84.65%;
+  height: 8%;
+}
+
+.skin-rift .limit-icon,
+.skin-rift .limit-head strong {
+  display: none;
+}
+
+.skin-rift .limit-body,
+.skin-rift .limit-track {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+
+.skin-rift .limit-track {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  background: rgba(3, 7, 8, 0.52);
+  box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.7);
+}
+
+.skin-rift .limit-bar {
+  position: relative;
+  z-index: 1;
+  border-radius: 0;
+}
+
+.skin-rift .limit-head {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0;
+  color: #ffffff;
+  font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 300;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 5px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+}
+
+.skin-rift .limit-label {
+  display: none;
+}
+
+.skin-rift .limit-reset {
+  display: none;
+}
+
+.skin-rift .limit-percent {
+  display: block;
+  min-width: 0;
+  max-width: 96%;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skin-rift .reset-cursor {
+  display: block;
+  z-index: 3;
+  top: -3px;
+  width: 2px;
+  height: calc(100% + 6px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65), 0 0 7px rgba(255, 255, 255, 0.88);
+}
+
+.skin-rift .reset-cursor::before {
+  top: -5px;
+  border-left-width: 4px;
+  border-right-width: 4px;
+  border-top: 5px solid rgba(255, 255, 255, 0.96);
+}
+
+.skin-rift .red .limit-bar {
+  background:
+    linear-gradient(180deg, rgba(232, 255, 201, 0.72), transparent 34%),
+    linear-gradient(90deg, #164f18, #24b948 48%, #82f25f);
+  box-shadow: 0 0 8px rgba(90, 255, 113, 0.45);
+}
+
+.skin-rift .blue .limit-bar {
+  background:
+    linear-gradient(180deg, rgba(206, 238, 255, 0.64), transparent 36%),
+    linear-gradient(90deg, #0b2d78, #156bd8 48%, #35c7ff);
+  box-shadow: 0 0 8px rgba(55, 177, 255, 0.46);
+}
+
+.skin-rift .meta {
+  display: none;
+}
+
+.skin-rift .resize-grip {
+  z-index: 100;
+  right: 0;
+  bottom: 0;
 }

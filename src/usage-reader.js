@@ -451,11 +451,17 @@ function makeLevel(tokens, tokensPerLevel) {
   const totalTokens = Math.max(0, Number(tokens || 0));
   const level = Math.max(1, Math.ceil(totalTokens / step));
   const levelCap = step * level;
+  const levelFloor = Math.max(0, levelCap - step);
+  const currentLevelXp = Math.max(0, totalTokens - levelFloor);
+  const remainingLevelXp = Math.max(0, levelCap - totalTokens);
   return {
     value: level,
-    currentXp: totalTokens,
-    nextXp: levelCap,
-    percent: clamp((totalTokens / levelCap) * 100, 0, 100),
+    currentXp: currentLevelXp,
+    nextXp: step,
+    totalXp: totalTokens,
+    levelCap,
+    remainingLevelXp,
+    percent: clamp((1 - (remainingLevelXp / step)) * 100, 0, 100),
     tokensPerLevel: step
   };
 }

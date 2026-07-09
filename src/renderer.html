@@ -10,6 +10,8 @@
     <main class="shell">
       <section id="panel" class="panel">
         <div class="window-actions">
+          <button id="character-toggle" title="Switch character">◉</button>
+          <button id="skin-toggle" title="Switch skin">◇</button>
           <button id="refresh" title="Refresh">↻</button>
           <button id="pin" title="Toggle always on top">⌖</button>
           <button id="close" title="Close">×</button>
@@ -20,6 +22,14 @@
             <div id="pet" class="pet"></div>
           </div>
           <div class="identity">
+            <div class="skill-strip" aria-hidden="true">
+              <span class="skill-slot skill-slot-blue">Q</span>
+              <span class="skill-slot skill-slot-gold">W</span>
+              <span class="skill-slot skill-slot-cyan">E</span>
+              <span class="skill-slot skill-slot-violet">R</span>
+              <span class="skill-slot skill-slot-summoner">D</span>
+              <span class="skill-slot skill-slot-summoner">F</span>
+            </div>
             <div id="task-bubble" class="bubble">
               <span id="bubble-status" class="bubble-status"></span>
               <span id="bubble-text">Coding<br />together!</span>
@@ -68,14 +78,16 @@
               <div id="secondary-bar" class="limit-bar"></div>
               <span id="secondary-cursor" class="reset-cursor"></span>
             </div>
-            <div id="resize-grip" class="resize-grip" title="Resize">↘</div>
           </div>
         </section>
+
+        <div id="resize-grip" class="resize-grip" title="Resize">↘</div>
 
         <footer class="meta">
           <span id="plan">plan: --</span>
           <span id="updated">not updated yet</span>
         </footer>
+        <span id="rift-level" class="rift-level" aria-hidden="true">1</span>
       </section>
     </main>
     <script src="./renderer.js"></script>

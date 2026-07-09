@@ -6,6 +6,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "dev": "CODEX_USAGE_PET_WATCH=1 electron .",
     "smoke": "node src/usage-reader.js --once",
     "fetch-profile": "node scripts/fetch-profile-stats.js",
     "launchd:install": "node scripts/install-launchd.js install",
