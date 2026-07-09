@@ -14,6 +14,18 @@
 - 支持拖拽移动窗口和右下角调整大小。
 - 支持每小时自动刷新个人累计 Token 数。
 
+## 皮肤
+
+应用内置两套皮肤，可在右上角按钮中切换：
+
+### 游戏风格
+
+![游戏风格皮肤](assets/readme/game-skin.png)
+
+### 简约风格
+
+![简约风格皮肤](assets/readme/minimal-skin.png)
+
 ## 环境要求
 
 - macOS

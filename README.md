@@ -6,6 +6,18 @@ macOS always-on-top floating window for local Codex usage, rate limits, task sta
 
 The app reads local Codex session logs from `~/.codex`, so it does not require a separate server. For correct lifetime-token leveling, install the local hourly profile refresh once. It writes `profile-stats.json` from the logged-in Codex auth file, which is the data source used for the level display.
 
+## Skins
+
+The app includes two switchable skins: a game-style HUD and a minimal floating panel.
+
+### Game Style
+
+![Game style skin](assets/readme/game-skin.png)
+
+### Minimal Style
+
+![Minimal style skin](assets/readme/minimal-skin.png)
+
 ## Requirements
 
 - macOS
