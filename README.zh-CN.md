@@ -4,6 +4,30 @@
 
 应用读取本机 `~/.codex` 下的 Codex session 日志，不需要额外服务。为了让等级正确使用个人累计 Token 数，建议首次安装后执行一次个人资料刷新定时任务，它会通过本机 Codex 登录态生成并定时更新 `profile-stats.json`。
 
+## 更新提示：v0.1.1（2026-07-10）
+
+近期 Codex Desktop 更新了本机 session 日志行为：多个限额通道、guardian/subagent 会话可能同时写入日志，新版工具活动也开始使用 `custom_tool_call` 和 MCP 事件。旧版 Codex Usage Pet 因此可能一直显示 `100%`、重置倒计时长期停在 `5h` / `7d` 附近，或把其他任务和审批会话误认为当前任务。
+
+`v0.1.1` 已完成以下兼容调整：
+
+- 固定优先读取标准 `codex` 限额通道，避免辅助通道的零用量覆盖真实数据。
+- 选择当前任务时排除 guardian 和 subagent 会话。
+- 支持新版 `custom_tool_call`、`custom_tool_call_output` 和 MCP 工具事件。
+- 当最新消息只是“允许”“继续”“确认”等审批回复时，保留原任务标题。
+- 增加多会话限额选择和活动状态回归测试。
+
+建议所有现有用户更新并重启应用：
+
+```bash
+cd codex-usage-pet
+git pull --ff-only
+npm install
+npm test
+npm start
+```
+
+如果悬浮窗口已经打开，请先退出再启动新版本，因为日志读取模块由 Electron 主进程加载。
+
 ## 功能
 
 - 顶层悬浮窗口，显示在所有桌面。
@@ -149,6 +173,7 @@ uninstall-profile-refresh.command
   },
   "usage": {
     "codexHome": "~/.codex",
+    "preferredLimitId": "codex",
     "profileStatsFile": "profile-stats.json",
     "tokensPerLevel": 100000000,
     "refreshMs": 5000
@@ -221,6 +246,7 @@ levelCap = level * tokensPerLevel
 ## 校验
 
 ```bash
+npm test
 npm run smoke
 node --check src/main.js
 node --check src/preload.js

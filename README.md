@@ -6,6 +6,30 @@ macOS always-on-top floating window for local Codex usage, rate limits, task sta
 
 The app reads local Codex session logs from `~/.codex`, so it does not require a separate server. For correct lifetime-token leveling, install the local hourly profile refresh once. It writes `profile-stats.json` from the logged-in Codex auth file, which is the data source used for the level display.
 
+## Update Notice: v0.1.1 (2026-07-10)
+
+Codex Desktop changed its local session-log behavior in recent releases. Multiple rate-limit channels and guardian/subagent sessions can now be written at the same time, and newer tool activity may use `custom_tool_call` or MCP events. Older versions of Codex Usage Pet may therefore become stuck at `100%`, show a reset countdown that stays near `5h` / `7d`, or display activity from the wrong task.
+
+Version `0.1.1` updates the reader to:
+
+- Prefer the standard `codex` rate-limit channel instead of allowing a zero-usage auxiliary channel to overwrite it.
+- Ignore guardian and subagent sessions when selecting the current user task.
+- Support the newer `custom_tool_call`, `custom_tool_call_output`, and MCP tool events.
+- Preserve the real task title when the latest user message is only an approval such as “continue” or “approve”.
+- Add regression tests for multi-session quota selection and activity tracking.
+
+Existing users should update and restart the app:
+
+```bash
+cd codex-usage-pet
+git pull --ff-only
+npm install
+npm test
+npm start
+```
+
+If the floating window is already open, quit it before starting the updated version because the log reader is loaded by the Electron main process.
+
 ## Skins
 
 The app includes two switchable skins: a game-style HUD and a minimal floating panel.
@@ -141,6 +165,7 @@ Important defaults:
   },
   "usage": {
     "codexHome": "~/.codex",
+    "preferredLimitId": "codex",
     "profileStatsFile": "profile-stats.json",
     "tokensPerLevel": 100000000,
     "refreshMs": 5000
@@ -198,6 +223,7 @@ The failed state is intentionally mapped to `idle`, so the crying/error row is n
 ## Validation
 
 ```bash
+npm test
 npm run smoke
 node --check src/main.js
 node --check src/preload.js

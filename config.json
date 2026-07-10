@@ -20,6 +20,7 @@
   "usage": {
     "codexHome": "~/.codex",
     "maxSessionFiles": 24,
+    "preferredLimitId": "codex",
     "includeArchivedSessions": false,
     "tailBytes": 2097152,
     "levelTokenOffset": 0,

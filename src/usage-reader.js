@@ -74,7 +74,68 @@ function getCandidateFiles(config) {
   if (config.usage.includeArchivedSessions) {
     files.push(...walkJsonl(path.join(codexHome, 'archived_sessions')));
   }
-  return files.sort((a, b) => b.mtimeMs - a.mtimeMs).slice(0, max);
+  return files
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)
+    .slice(0, max)
+    .map((file) => ({ ...file, sessionMeta: readSessionMeta(file.path) }));
+}
+
+function readFirstLine(filePath, maxBytes = 4 * 1024 * 1024) {
+  let fd;
+  try {
+    const stat = fs.statSync(filePath);
+    const length = Math.min(stat.size, maxBytes);
+    const chunks = [];
+    let offset = 0;
+    fd = fs.openSync(filePath, 'r');
+    while (offset < length) {
+      const size = Math.min(64 * 1024, length - offset);
+      const buffer = Buffer.alloc(size);
+      const bytesRead = fs.readSync(fd, buffer, 0, size, offset);
+      if (!bytesRead) break;
+      const chunk = buffer.subarray(0, bytesRead);
+      const newlineIndex = chunk.indexOf(10);
+      if (newlineIndex >= 0) {
+        chunks.push(chunk.subarray(0, newlineIndex));
+        break;
+      }
+      chunks.push(chunk);
+      offset += bytesRead;
+    }
+    return Buffer.concat(chunks).toString('utf8');
+  } catch {
+    return '';
+  } finally {
+    if (fd != null) fs.closeSync(fd);
+  }
+}
+
+function readSessionMeta(filePath) {
+  const line = readFirstLine(filePath);
+  if (!line) return null;
+  try {
+    const obj = JSON.parse(line);
+    if (obj.type !== 'session_meta') return null;
+    const payload = obj.payload || {};
+    return {
+      id: payload.id || payload.session_id || null,
+      parentThreadId: payload.parent_thread_id || null,
+      threadSource: payload.thread_source || null,
+      source: payload.source || null,
+      cwd: payload.cwd || null
+    };
+  } catch {
+    return null;
+  }
+}
+
+function isPrimaryUserSession(file) {
+  const meta = file?.sessionMeta;
+  if (!meta) return true;
+  if (meta.parentThreadId) return false;
+  if (meta.threadSource === 'subagent') return false;
+  if (meta.source && typeof meta.source === 'object' && meta.source.subagent) return false;
+  return true;
 }
 
 function readFileTail(filePath, tailBytes) {
@@ -120,12 +181,13 @@ function parseTokenCounts(filePath, config) {
 
 function collectUsage(config = readConfig()) {
   const files = getCandidateFiles(config);
-  let latest = null;
   let latestActivity = null;
   let lifetimeTokens = 0;
   let sessionCount = 0;
+  const latestByLimitId = new Map();
 
   for (const file of files) {
+    if (!isPrimaryUserSession(file)) continue;
     const events = parseTokenCounts(file.path, config);
     if (!events.length) continue;
     sessionCount += 1;
@@ -133,19 +195,24 @@ function collectUsage(config = readConfig()) {
     const maxForSession = events.reduce((max, event) => Math.max(max, event.totalTokens || 0), 0);
     lifetimeTokens += maxForSession;
 
-    const newestForSession = events.reduce((best, event) => {
-      if (!best) return event;
-      return new Date(event.timestamp).getTime() > new Date(best.timestamp).getTime() ? event : best;
-    }, null);
-
-    if (!latest || new Date(newestForSession.timestamp).getTime() > new Date(latest.timestamp).getTime()) {
-      latest = newestForSession;
+    for (const event of events) {
+      const limitId = event.payload?.rate_limits?.limit_id || 'unknown';
+      const current = latestByLimitId.get(limitId);
+      if (!current || eventTime(event) > eventTime(current)) {
+        latestByLimitId.set(limitId, event);
+      }
     }
   }
 
-  for (const file of files.slice(0, Math.min(8, files.length))) {
+  const preferredLimitId = config?.usage?.preferredLimitId || 'codex';
+  const latest = latestByLimitId.get(preferredLimitId) || newestEvent(latestByLimitId.values());
+
+  const activityFiles = files.filter(isPrimaryUserSession).slice(0, 8);
+  for (const file of activityFiles) {
     const activity = parseActivity(file.path, config);
     if (!activity?.updatedAt) continue;
+    activity.sessionId = file.sessionMeta?.id || null;
+    activity.workspace = file.sessionMeta?.cwd ? path.basename(file.sessionMeta.cwd) : null;
     if (!latestActivity || new Date(activity.updatedAt).getTime() > new Date(latestActivity.updatedAt).getTime()) {
       latestActivity = activity;
     }
@@ -199,10 +266,25 @@ function collectUsage(config = readConfig()) {
       sessionCount,
       fileCount: files.length,
       recentTokenTotal: lifetimeTokens,
+      preferredLimitId,
+      availableLimitIds: Array.from(latestByLimitId.keys()),
       tailBytes: Number(config.usage.tailBytes || 2 * 1024 * 1024),
       includeArchivedSessions: Boolean(config.usage.includeArchivedSessions)
     }
   };
+}
+
+function eventTime(event) {
+  const timestamp = new Date(event?.timestamp || 0).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function newestEvent(events) {
+  let latest = null;
+  for (const event of events) {
+    if (!latest || eventTime(event) > eventTime(latest)) latest = event;
+  }
+  return latest;
 }
 
 function normalizeProfileStats(config) {
@@ -273,6 +355,7 @@ function parseActivity(filePath, config) {
 
     if (obj.type === 'event_msg') {
       if (payload.type === 'task_started') {
+        pendingCalls.clear();
         activity.turnId = payload.turn_id || activity.turnId;
         activity.isComplete = false;
         activity.isFailed = false;
@@ -284,6 +367,7 @@ function parseActivity(filePath, config) {
       }
 
       if (payload.type === 'task_complete') {
+        pendingCalls.clear();
         activity.turnId = payload.turn_id || activity.turnId;
         activity.isComplete = true;
         activity.isToolRunning = false;
@@ -299,6 +383,17 @@ function parseActivity(filePath, config) {
         activity.updatedAt = timestamp || activity.updatedAt;
         continue;
       }
+
+      if (payload.type === 'mcp_tool_call_begin') {
+        const summary = summarizeMcpToolCall(payload.invocation);
+        markToolStarted(activity, pendingCalls, payload.call_id, summary, timestamp);
+        continue;
+      }
+
+      if (payload.type === 'mcp_tool_call_end') {
+        markToolFinished(activity, pendingCalls, payload.call_id, payload.result, timestamp);
+        continue;
+      }
     }
 
     if (obj.type !== 'response_item') continue;
@@ -308,7 +403,9 @@ function parseActivity(filePath, config) {
       if (!message) continue;
       const userPrompt = payload.role === 'user' ? extractUserPrompt(message) : null;
       if (userPrompt) {
-        activity.task = cleanText(userPrompt);
+        if (!activity.task || !isContinuationReply(userPrompt)) {
+          activity.task = cleanText(userPrompt);
+        }
         activity.updatedAt = timestamp || activity.updatedAt;
       } else if (payload.role === 'assistant') {
         activity.status = cleanText(message);
@@ -317,33 +414,15 @@ function parseActivity(filePath, config) {
       continue;
     }
 
-    if (payload.type === 'function_call') {
-      const summary = summarizeToolCall(payload.name, payload.arguments);
-      activity.tool = summary;
-      activity.status = summary ? `Running ${summary}` : 'Running tool';
-      activity.isToolRunning = true;
-      activity.isComplete = false;
-      activity.isFailed = false;
-      activity.completedAt = null;
-      activity.completionHasFinalMessage = false;
-      activity.updatedAt = timestamp || activity.updatedAt;
-      if (payload.call_id) pendingCalls.set(payload.call_id, summary);
+    if (payload.type === 'function_call' || payload.type === 'custom_tool_call') {
+      const rawArgs = payload.arguments ?? payload.input;
+      const summary = summarizeToolCall(payload.name, rawArgs);
+      markToolStarted(activity, pendingCalls, payload.call_id, summary, timestamp);
       continue;
     }
 
-    if (payload.type === 'function_call_output') {
-      const finishedTool = payload.call_id ? pendingCalls.get(payload.call_id) : activity.tool;
-      const failed = toolOutputLooksFailed(payload.output);
-      if (payload.call_id) pendingCalls.delete(payload.call_id);
-      if (pendingCalls.size === 0) {
-        activity.isToolRunning = false;
-        activity.tool = finishedTool || activity.tool;
-        activity.isFailed = failed;
-        activity.status = failed
-          ? `Failed ${finishedTool || 'tool'}`
-          : `Finished ${finishedTool || 'tool'}, waiting for next step`;
-      }
-      activity.updatedAt = timestamp || activity.updatedAt;
+    if (payload.type === 'function_call_output' || payload.type === 'custom_tool_call_output') {
+      markToolFinished(activity, pendingCalls, payload.call_id, payload.output, timestamp);
     }
   }
 
@@ -356,6 +435,33 @@ function parseActivity(filePath, config) {
   suppressFreshCompletionDuringContextUpdate(activity, config);
   activity.isActive = Boolean(activity.task && !activity.isComplete);
   return activity;
+}
+
+function markToolStarted(activity, pendingCalls, callId, summary, timestamp) {
+  activity.tool = summary;
+  activity.status = summary ? `Running ${summary}` : 'Running tool';
+  activity.isToolRunning = true;
+  activity.isComplete = false;
+  activity.isFailed = false;
+  activity.completedAt = null;
+  activity.completionHasFinalMessage = false;
+  activity.updatedAt = timestamp || activity.updatedAt;
+  if (callId) pendingCalls.set(callId, summary);
+}
+
+function markToolFinished(activity, pendingCalls, callId, output, timestamp) {
+  const finishedTool = callId ? pendingCalls.get(callId) : activity.tool;
+  const failed = toolOutputLooksFailed(output);
+  if (callId) pendingCalls.delete(callId);
+  if (pendingCalls.size === 0) {
+    activity.isToolRunning = false;
+    activity.tool = finishedTool || activity.tool;
+    activity.isFailed = failed;
+    activity.status = failed
+      ? `Failed ${finishedTool || 'tool'}`
+      : `Finished ${finishedTool || 'tool'}, waiting for next step`;
+  }
+  activity.updatedAt = timestamp || activity.updatedAt;
 }
 
 function suppressFreshCompletionDuringContextUpdate(activity, config) {
@@ -371,10 +477,11 @@ function suppressFreshCompletionDuringContextUpdate(activity, config) {
 }
 
 function toolOutputLooksFailed(output) {
-  const text = String(output || '').toLowerCase();
+  const text = (typeof output === 'string' ? output : JSON.stringify(output || '')).toLowerCase();
   return (
     /process exited with code\s+([1-9]\d*)/.test(text) ||
-    /exit code:\s*([1-9]\d*)/.test(text)
+    /exit code:\s*([1-9]\d*)/.test(text) ||
+    /"iserror"\s*:\s*true/.test(text)
   );
 }
 
@@ -392,6 +499,7 @@ function extractMessageText(message) {
 function extractUserPrompt(message) {
   const value = message.trim();
   if (!value || value.startsWith('<environment_context>')) return null;
+  if (value.startsWith('The following is the Codex agent history added since your last approval assessment.')) return null;
   const marker = 'My request for Codex:';
   const markerIndex = value.indexOf(marker);
   if (markerIndex >= 0) {
@@ -399,6 +507,14 @@ function extractUserPrompt(message) {
   }
   if (value.startsWith('# Files mentioned by the user:')) return null;
   return value;
+}
+
+function isContinuationReply(value) {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[。.!！?？,，\s]+$/g, '');
+  return /^(允许|同意|继续|可以|好|好的|确认|批准|yes|ok|okay|approve|approved)$/.test(normalized);
 }
 
 function summarizeToolCall(name, rawArgs) {
@@ -410,9 +526,17 @@ function summarizeToolCall(name, rawArgs) {
     args = {};
   }
   if (name === 'exec_command' && args.cmd) return `terminal: ${cleanText(args.cmd, 80)}`;
+  if (name === 'exec') return 'local tools';
   if (name === 'apply_patch') return 'editing files';
   if (name === 'write_stdin') return 'waiting for command';
   return name.replace(/_/g, ' ');
+}
+
+function summarizeMcpToolCall(invocation) {
+  const server = cleanText(invocation?.server || '', 36);
+  const tool = cleanText(invocation?.tool || '', 56);
+  if (server && tool) return `${server}: ${tool}`;
+  return tool || server || 'connected tool';
 }
 
 function cleanText(value, maxLength = 130) {
