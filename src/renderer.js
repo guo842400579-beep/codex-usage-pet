@@ -244,7 +244,7 @@ function renderUsage(data) {
 
   $('level-number').textContent = data.level.value;
   $('rift-level').textContent = data.level.value;
-  $('xp-text').textContent = `${formatNumber(data.level.currentXp)} / ${formatNumber(data.level.nextXp)} XP`;
+  $('xp-text').textContent = `${formatNumber(data.level.totalXp)} / ${formatNumber(data.level.levelCap)} XP`;
   state.xpTooltipText = `个人总token ${formatMillions(data.level.totalXp)} / ${formatMillions(data.level.levelCap)}`;
   setButtonTooltip($('xp-line'), state.xpTooltipText);
   state.levelPercent = data.level.percent;
